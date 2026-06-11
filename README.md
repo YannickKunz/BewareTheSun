@@ -1,6 +1,36 @@
 # BewareTheSun
 
-## Web version of the game
+Petit Jasmin, a potted jasmine, must escape the scorching sun. Collect every
+water droplet to unlock the watering can and move on to the next garden.
+
+- **7 procedurally generated levels** — a brand-new layout every run
+  (press `N` in-game to reroll the current garden).
+- **Day/night switching** (`T`): by day the sun burns you unless you stay in
+  shade (flower platforms bloom and the light is ray-traced around
+  platforms); by night enemies prowl, flowers wilt, and mushrooms become
+  trampolines.
+- **All level art is generated procedurally at startup** — pixel-art sprites
+  and painted per-biome backgrounds, no image files needed for level elements.
+- Modern platformer feel: coyote time, jump buffering, variable jump height,
+  enemy stomping, knockback + invulnerability, shade regeneration, particles
+  and screen shake.
+
+**Controls:** Arrows/WASD move, SPACE/W/UP jump, `T` day-night, `R` restart,
+`N` new layout, `H` debug overlay, ESC settings.
+
+**Quick build (macOS, with `brew install raylib`):**
+
+```bash
+clang++ -std=c++17 -O2 src/main.cpp src/Game.cpp src/entities/*.cpp \
+  src/world/*.cpp src/gfx/*.cpp -Isrc -I/opt/homebrew/include \
+  -L/opt/homebrew/lib -lraylib -o build/BewareTheSun
+./build/BewareTheSun   # run from the repo root (needs assets/)
+```
+
+Setting `BTS_SHOT=<level>` runs a self-test that screenshots day and night
+of that level and exits.
+
+## Web version of the game (old jam build)
 
 [Play BewareTheSun](https://bewarethesun.netlify.app/)
 

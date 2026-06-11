@@ -1,13 +1,15 @@
 #pragma once
 #include "entities/Enemy.h"
 #include "entities/Player.h"
+#include "gfx/ProcArt.h"
 #include "raylib.h"
 #include "world/Level.h"
+#include <memory>
 #include <vector>
 
 class Game {
 public:
-  Game();
+  Game() = default;
   ~Game();
 
   void Init();
@@ -15,32 +17,63 @@ public:
   void Draw();
   void Unload();
 
+  // Test hooks (used by main when the BTS_SHOT env var is set)
+  void DebugStartLevel(int index);
+  void DebugToggleNight();
+
 private:
-  // Game State
-  bool isDayTime;
-  bool debugMode;     // Toggle with H
-  bool isUnloaded;    // Prevent double-free
-  bool sunHintShown;  // Has the sun hint been shown?
-  float sunHintTimer; // Timer for showing hint text
+  // --- Game state ---
+  bool isDayTime = true;
+  float dayBlend = 1.0f; // visual crossfade: 1 = day, 0 = night
+  bool debugMode = false;
+  bool isUnloaded = false;
+  bool sunHintShown = false;
+  float sunHintTimer = 0.0f;
+  float toggleCooldown = 0.0f;
 
   Player player;
+  bool deathStarted = false;
+  float deathTimer = 0.0f;
 
-  // Level Management
+  // --- Levels (procedurally generated) ---
   std::vector<Level> levels;
-  int currentLevelIndex;
+  std::vector<unsigned> seeds;
+  int currentLevelIndex = 0;
+  std::vector<std::unique_ptr<Enemy>> enemies;
 
-  // Current Level Entities (pointers managed by Game)
-  std::vector<Enemy *> currentEnemies;
-
+  void GenerateAllLevels();
+  void RegenerateCurrentLevel(bool newSeed);
   void LoadLevel(int index);
-  void UnloadCurrentLevelEntities();
-  void RebuildLevelGeometry(); // Rebuild platform/spawn/exit positions for
-                               // current resolution
 
-  // Screen Management
+  // --- Level transition / banner ---
+  float fade = 0.0f;
+  bool fadingOut = false;
+  int pendingLevel = -1; // LEVEL_COUNT means "win"
+  float bannerTimer = 0.0f;
+
+  // --- Particles & screen shake ---
+  struct Particle {
+    Vector2 pos, vel;
+    float life, maxLife, size;
+    Color color;
+    bool gravity;
+  };
+  std::vector<Particle> particles;
+  void Emit(Vector2 pos, int count, Color color, float speed, bool gravity,
+            float life = 0.6f);
+  void UpdateParticles(float dt);
+  void DrawParticles() const;
+  float shakeTime = 0.0f;
+  float shakeMag = 0.0f;
+  void Shake(float time, float mag);
+
+  float walkSoundTimer = 0.0f;
+  float burnSoundTimer = 0.0f;
+
+  // --- Screens ---
   enum GameScreen { TITLE, STORY, GAMEPLAY, SETTINGS, WIN, GAME_OVER };
-  GameScreen currentScreen;
-  GameScreen previousScreen; // To return from SETTINGS
+  GameScreen currentScreen = TITLE;
+  GameScreen previousScreen = TITLE;
 
   void UpdateTitle();
   void UpdateStory();
@@ -55,17 +88,15 @@ private:
   void DrawGameOver();
   void DrawSettings();
   void DrawWin();
-
-  void ResetGame();
+  void DrawHUD();
 
   // --- Settings ---
-  float masterVolume;
-  float musicVolume;
-  float sfxVolume;
-  bool isFullscreen;
-  int selectedResIndex;
-  int settingsSelection; // 0=resolution, 1=music vol, 2=sfx vol, 3=fullscreen,
-                         // 4=back
+  float masterVolume = 1.0f;
+  float musicVolume = 0.7f;
+  float sfxVolume = 1.0f;
+  bool isFullscreen = false;
+  int selectedResIndex = 2; // 1280x800
+  int settingsSelection = 0;
 
   struct ResOption {
     int width;
@@ -81,51 +112,32 @@ private:
   };
 
   void ApplyVolume();
-  void ApplyResolution();
+  void ApplyResolution(int newW, int newH);
+  void ApplyPlayerSize();
 
-  // --- Loaded Textures (owned by Game, assigned to entities) ---
-  // Player textures
-  Texture2D playerIdleTex;
-  Texture2D playerWalkSheet;
-  Texture2D playerDeathTex;
+  // --- Art ---
+  ProcArt art; // everything in-level is generated procedurally
+  Texture2D introScreenTex{};
+  Texture2D introImageTex{};
+  Texture2D gameOverScreenTex{};
 
-  // Enemy textures
-  Texture2D roachTex;
-  Texture2D spiderSheet;
+  float flowerAnimTimer = 0.0f;
+  int flowerFrame = 0;
 
-  // UI/Screen textures
-  Texture2D introScreenTex;
-  Texture2D introImageTex;
-  Texture2D gameOverScreenTex;
+  // --- Audio ---
+  Sound jumpSound{}, walkSound{}, burnSound{}, deathSound{},
+      wateringCanSound{};
+  static constexpr int TRACK_COUNT = 3;
+  Music dayTracks[TRACK_COUNT]{};
+  Music nightTracks[TRACK_COUNT]{};
+  Music titleMusic{};
+  bool audioLoaded = false;
+  Music *currentPlayingMusic = nullptr; // points into the arrays above
 
-  // Exit zone (watering can) textures
-  Texture2D waterPotDayTex;
-  Texture2D waterPotNightTex;
+  void PlayLevelMusic();
+  void StopCurrentMusic();
 
-  // Platform textures
-  Texture2D flowerTex;
-  Texture2D flowerAnimSheet;
-  int flowerAnimFrameCount;
-  int flowerAnimCurrentFrame;
-  float flowerAnimTimer;
-  float flowerAnimSpeed;
-
-  Texture2D mushroomDayTex;
-  Texture2D mushroomNightTex;
-
-  Texture2D platformDayTex;
-  Texture2D platformNightTex;
-
-  // Audio
-  Sound jumpSound;
-  Sound walkSound;
-  Sound burnSound;
-  Sound deathSound;
-  Sound wateringCanSound;
-  Music titleMusic;
-  bool titleMusicLoaded;
-
-  // Currently playing music tracking
-  Music *currentPlayingMusic;
-  bool isMusicPlaying;
+  // --- Helpers ---
+  int DropletsCollected(const Level &lvl) const;
+  bool ExitUnlocked(const Level &lvl) const;
 };

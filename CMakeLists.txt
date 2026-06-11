@@ -24,6 +24,8 @@ set(SOURCES
     src/entities/Spider.cpp
     src/entities/Roach.cpp
     src/world/Level.cpp
+    src/world/LevelGenerator.cpp
+    src/gfx/ProcArt.cpp
 )
 
 # Create Executable

@@ -1,10 +1,10 @@
 #pragma once
 #include "Enemy.h"
 
+// Patrols horizontally between minBound and maxBound (set from EnemyConfig).
 class Roach : public Enemy {
 public:
-  Roach(Vector2 pos) : Enemy(pos) { speed = 100.0f; }
-
-  void Draw() override;
+  explicit Roach(Vector2 pos) : Enemy(pos) {}
   void Update(float dt, const Level &level) override;
+  void Draw() override;
 };

@@ -48,6 +48,7 @@ if [ ! -f "$RAYLIB_WEB_LIB" ]; then
         "$RAYLIB_SRC/rtext.c"
         "$RAYLIB_SRC/rmodels.c"
         "$RAYLIB_SRC/raudio.c"
+        "$RAYLIB_SRC/utils.c"
     )
     
     RAYLIB_OBJS=()
@@ -84,6 +85,8 @@ emcc -o "$OUT_DIR/index.html" \
     src/entities/Roach.cpp \
     src/entities/Spider.cpp \
     src/world/Level.cpp \
+    src/world/LevelGenerator.cpp \
+    src/gfx/ProcArt.cpp \
     -Os -Wall \
     "$RAYLIB_WEB_LIB" \
     -s ASYNCIFY \
