@@ -12,9 +12,9 @@ legacy C++ build is a dependency.
   positions use `Vector2(x, z)`. Movement stays on the garden plane.
 - **`scripts/game.gd`** — scene assembly, fixed-step simulation, input, movement,
   enemy behavior, resource management, audio, progression, and persistence.
-- **`scripts/art.gd`** — shared material palette and original procedural meshes.
-  Named character pieces support direct procedural animation. No external mesh
-  asset is needed for runtime; the GLBs are an editable art handoff.
+- **`scripts/art.gd`** — instances the Blender-authored GLB scenes, advances their
+  imported animation clips manually, and assigns gameplay-specific material
+  overrides. GLBs are now runtime assets, not just an optional art handoff.
 - **`scripts/hud.gd`** — scalable 1440×900 design-space drawing with native Godot
   buttons for clickable, keyboard-focusable menu actions. World markers project
   through the actual camera.
@@ -50,14 +50,28 @@ legacy C++ build is a dependency.
 
 ## Asset pipeline
 
-`art.gd` → `game/tools/bake_models.gd` → editable `.glb` files → optional
-`tools/build_models.py` → `art-source/garden_cast.blend`.
+`tools/build_models.py` authors geometry, materials, NLA clips and a studio scene
+in Blender → `art-source/garden_library.blend` + 21 runtime `.glb` files + the
+Cycles title render. `tools/export_blender_assets.py` exports later artist edits
+from the native `.blend` without rerunning the generator.
 
-`tools/build_audio.py` → original mono WAV effects and ambient music.
+`game/assets/models/manifest.json` records exported model sizes, triangle counts,
+and expected clip names. `game/tests/test_art.gd` loads the actual Godot imports
+and verifies geometry, clip behavior, and the named gameplay pivots/materials.
 
-The character's feet, stem, and root are animated in Godot. Beetle legs and body,
-canopies, flower heads, dew, and living gate roots follow the same pattern. No
-baked animation clips are included in the Blender handoff.
+Imported models sit under a separate placement wrapper. This keeps authored
+local animation transforms independent of world movement and collision. Clips
+run in manual processing mode; the game supplies time only while unpaused.
+Repeating clips loop; the gate's opening clip is a latched one-shot. Its selected
+clip is tracked separately from AnimationPlayer's current clip to avoid replaying
+it when Godot clears a finished animation.
+
+The flower head tilt/scale follows gameplay charge; canopy alpha and lantern-lens
+color remain runtime overrides. Each tree receives independent canopy material
+instances so fading one cannot affect the other trees. The ground's dynamic
+lantern shader is applied only to the named `GroundSurface` mesh, not the slab.
+
+`tools/build_audio.py` generates the original WAV effects and ambient score.
 
 ## Adding a garden
 

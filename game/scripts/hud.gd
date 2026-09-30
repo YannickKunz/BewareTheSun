@@ -3,6 +3,7 @@ extends Control
 var game: Node
 var font: Font = preload("res://assets/fonts/DMSans.ttf")
 var serif: Font = preload("res://assets/fonts/Fraunces.ttf")
+var title_art: Texture2D = preload("res://assets/art/title_scene.png")
 var small_caps: FontVariation
 var buttons: Array[Button] = []
 var last_mode := ""
@@ -76,7 +77,8 @@ func _draw() -> void:
 		_draw_modal()
 
 func _draw_title() -> void:
-	# Deliberate split composition: typography left, living diorama right.
+	# Blender-rendered cast portrait, with the same meshes/materials used in-game.
+	draw_texture_rect(title_art, Rect2(470, 0, 1260, 900), false)
 	draw_rect(Rect2(0,0,552,900),Color("17332f"))
 	for i in range(80):
 		draw_rect(Rect2(552+i*2,0,2,900),Color(0.09,.2,.18,(1-i/80.0)*.94))
@@ -96,7 +98,7 @@ func _draw_title() -> void:
 	sun_icon(Vector2(1004,786),20,BLUE,true)
 	label_at("YOUR POCKET-SIZED ECLIPSE",Vector2(1040,776),12,GOLD)
 	label_at("Carry the night into the daylight.",Vector2(1040,805),17,PAPER,true)
-	label_at("01 — THE SLEEPING GARDEN",Vector2(895,83),14,PAPER)
+	label_at("PETIT JASMIN  &  THE DUSK GARDEN",Vector2(895,83),14,PAPER)
 	draw_line(Vector2(895,98),Vector2(1370,98),Color(.8,.85,.73,.28),1)
 
 func _draw_gameplay() -> void:
@@ -223,6 +225,7 @@ func _button(text: String, action: String, rect: Rect2, primary: bool) -> void:
 	button.add_theme_font_override("font",font)
 	button.add_theme_font_size_override("font_size",18 if primary else 15)
 	button.add_theme_color_override("font_color",INK if primary else PAPER)
+	button.add_theme_color_override("font_focus_color",INK if primary else PAPER)
 	button.add_theme_color_override("font_hover_color",INK if primary else GOLD)
 	button.add_theme_color_override("font_pressed_color",INK if primary else GOLD)
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND

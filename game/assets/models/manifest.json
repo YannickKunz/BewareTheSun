@@ -1,0 +1,146 @@
+{
+  "generator": "Blender 5.2.1 LTS",
+  "source": "art-source/garden_library.blend",
+  "script_sha256": "eace01684d672bc556e530febb67c7186a8d717d1f6e0780e1cab94206c83eb2",
+  "assets": {
+    "petit_jasmin": {
+      "triangles": 10696,
+      "mesh_objects": 27,
+      "clips": [
+        "idle",
+        "walk"
+      ],
+      "bytes": 330976
+    },
+    "dusk_beetle": {
+      "triangles": 4264,
+      "mesh_objects": 7,
+      "clips": [
+        "scuttle",
+        "sleep"
+      ],
+      "bytes": 127452
+    },
+    "umbrella_tree": {
+      "triangles": 5360,
+      "mesh_objects": 2,
+      "clips": [
+        "sway"
+      ],
+      "bytes": 317280
+    },
+    "garden_gate": {
+      "triangles": 6068,
+      "mesh_objects": 13,
+      "clips": [],
+      "bytes": 224536
+    },
+    "sunflower": {
+      "triangles": 3336,
+      "mesh_objects": 2,
+      "clips": [],
+      "bytes": 108300
+    },
+    "moonflower": {
+      "triangles": 3336,
+      "mesh_objects": 2,
+      "clips": [],
+      "bytes": 109348
+    },
+    "garden_base": {
+      "triangles": 1024,
+      "mesh_objects": 38,
+      "clips": [],
+      "bytes": 113300
+    },
+    "path_tile": {
+      "triangles": 300,
+      "mesh_objects": 1,
+      "clips": [],
+      "bytes": 13784
+    },
+    "border_stone": {
+      "triangles": 108,
+      "mesh_objects": 1,
+      "clips": [],
+      "bytes": 7020
+    },
+    "wall_segment": {
+      "triangles": 688,
+      "mesh_objects": 1,
+      "clips": [],
+      "bytes": 38028
+    },
+    "pond": {
+      "triangles": 216,
+      "mesh_objects": 1,
+      "clips": [],
+      "bytes": 12444
+    },
+    "lily_pad": {
+      "triangles": 1396,
+      "mesh_objects": 7,
+      "clips": [],
+      "bytes": 43004
+    },
+    "grass_clump": {
+      "triangles": 216,
+      "mesh_objects": 1,
+      "clips": [],
+      "bytes": 16260
+    },
+    "flower_patch": {
+      "triangles": 5440,
+      "mesh_objects": 25,
+      "clips": [],
+      "bytes": 151972
+    },
+    "rock_cluster": {
+      "triangles": 60,
+      "mesh_objects": 1,
+      "clips": [],
+      "bytes": 9488
+    },
+    "mushroom_patch": {
+      "triangles": 1284,
+      "mesh_objects": 1,
+      "clips": [],
+      "bytes": 42576
+    },
+    "dew_drop": {
+      "triangles": 292,
+      "mesh_objects": 1,
+      "clips": [
+        "float"
+      ],
+      "bytes": 13028
+    },
+    "vine_gate": {
+      "triangles": 2880,
+      "mesh_objects": 1,
+      "clips": [
+        "open"
+      ],
+      "bytes": 111400
+    },
+    "shelter_marker": {
+      "triangles": 350,
+      "mesh_objects": 1,
+      "clips": [],
+      "bytes": 12024
+    },
+    "ring_marker": {
+      "triangles": 288,
+      "mesh_objects": 1,
+      "clips": [],
+      "bytes": 8756
+    },
+    "petal_particle": {
+      "triangles": 24,
+      "mesh_objects": 1,
+      "clips": [],
+      "bytes": 2752
+    }
+  },
+  "export_mode": "native blend collections (preserves artist edits)"
+}

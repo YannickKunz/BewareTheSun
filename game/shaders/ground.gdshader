@@ -10,8 +10,8 @@ varying vec3 world_position;
 void vertex() { world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
 void fragment() {
  vec2 p = world_position.xz;
- float noise = fract(sin(dot(floor(p*14.0), vec2(12.9898,78.233)))*43758.5453);
- vec3 base = sand.rgb * (0.93 + noise*0.10);
+ float noise = fract(sin(dot(floor(p*32.0), vec2(12.9898,78.233)))*43758.5453);
+ vec3 base = sand.rgb * (0.98 + noise*0.04);
  vec2 d = p-lamp_position;
  float dist = length(d);
  float cone = smoothstep(0.858,0.888,dot(normalize(d+vec2(0.00001)),lamp_direction)) * (1.0-smoothstep(6.55,6.8,dist));

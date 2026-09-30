@@ -107,7 +107,7 @@ func _setup_camera() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color("c7dac6")
 	env.ambient_light_energy = .65
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	add_child(environment)
 	sun = DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-62,-32,0)
@@ -118,7 +118,7 @@ func _setup_camera() -> void:
 	add_child(sun)
 	camera = Camera3D.new()
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 21.5
+	camera.size = 20.5
 	camera.position = Vector3(0,25,23)
 	add_child(camera)
 	camera.look_at(Vector3.ZERO)
@@ -157,106 +157,97 @@ func load_level(index: int) -> void:
 	_apply_lighting()
 
 func _build_world() -> void:
-	# Suspended garden slab, bevel-like inset edges and individually laid paving.
-	Art.box(world,Vector3(0,-.6,0),Vector3(23.4,1.1,15.4),Color("7b7256"))
-	Art.box(world,Vector3(0,-.22,0),Vector3(23.8,.3,15.8),Color("b7ac83"))
-	var ground := Art.box(world,Vector3(0,-.055,0),Vector3(23,.11,15),Color.WHITE)
+	# All physical scenery is imported from the Blender-authored asset library.
+	var base := Art.model("garden_base", world)
+	var ground := base.find_child("GroundSurface", true, false) as MeshInstance3D
 	ground_material = ShaderMaterial.new()
 	ground_material.shader = preload("res://shaders/ground.gdshader")
-	ground_material.set_shader_parameter("sand",Color("b9ac7e") if sky_day else Color("809485"))
+	ground_material.set_shader_parameter("sand", Color("978b70") if sky_day else Color("607a74"))
 	ground.material_override = ground_material
-	for x in range(-11,12):
-		for z in [-7.5,7.5]:
-			Art.box(world,Vector3(x,.08,z),Vector3(.94,.23,.28),Color("d0bf92"))
-	for z in range(-7,8):
-		for x in [-11.5,11.5]:
-			Art.box(world,Vector3(x,.08,z),Vector3(.28,.23,.94),Color("d0bf92"))
-	# A winding ribbon of old limestone. Gaps keep the soil and beam easy to read.
-	for i in range(28):
-		var t := i/27.0
-		var p := Vector2(-8,4).lerp(Vector2(8,-4),t)
-		p.y += sin(t*TAU)*1.7
-		var tile := Art.box(world,Vector3(p.x,.023,p.y),Vector3(.62,.05,.57),Color("cfc49b"))
-		tile.rotation.y = rng.randf_range(-.25,.25)
+	for x in range(-11, 12):
+		for z in [-7.5, 7.5]:
+			Art.model("border_stone", world, Vector3(x, 0, z))
+	for z in range(-7, 8):
+		for x in [-11.5, 11.5]:
+			Art.model("border_stone", world, Vector3(x, 0, z)).rotation.y = PI / 2
+	for i in range(24):
+		var t := i / 23.0
+		var p := Vector2(-8, 4).lerp(Vector2(8, -4), t)
+		p.y += sin(t * TAU) * 1.7
+		var tile := Art.model("path_tile", world, Vector3(p.x, .008, p.y))
+		tile.rotation.y = rng.randf_range(-.25, .25)
+		tile.scale = Vector3.ONE * rng.randf_range(.8, 1.0)
 	for rect: Rect2 in level.ponds:
 		var c := rect.get_center()
-		Art.box(world,Vector3(c.x,.025,c.y),Vector3(rect.size.x+.24,.08,rect.size.y+.24),Color("a79e7e"))
-		Art.box(world,Vector3(c.x,.07,c.y),Vector3(rect.size.x,.05,rect.size.y),Color("497f85"))
-		for i in range(5):
-			var p := c+Vector2(rng.randf_range(-rect.size.x*.38,rect.size.x*.38),rng.randf_range(-rect.size.y*.35,rect.size.y*.35))
-			Art.cylinder(world,Vector3(p.x,.108,p.y),.22,.22,.018,Color("789b73"))
+		var pond := Art.model("pond", world, Vector3(c.x, 0, c.y))
+		pond.scale = Vector3(rect.size.x, 1, rect.size.y)
+		for i in range(4):
+			var p := c + Vector2(rng.randf_range(-rect.size.x*.33, rect.size.x*.33), rng.randf_range(-rect.size.y*.28, rect.size.y*.28))
+			Art.model("lily_pad", world, Vector3(p.x, .09, p.y)).rotation.y = rng.randf()*TAU
 	for rect: Rect2 in level.walls:
 		_build_wall(rect)
 	for p: Vector2 in level.trees:
-		tree_nodes.append(Art.tree(world,p,rng.randf()*TAU))
-		shelters.append({"p":p,"r":1.85})
+		tree_nodes.append(Art.tree(world, p, rng.randf()*TAU))
+		shelters.append({"p":p, "r":1.85})
 	for rect: Rect2 in level.barriers:
-		var node := Node3D.new()
-		world.add_child(node)
 		var c := rect.get_center()
-		node.position = Vector3(c.x,0,c.y)
-		for i in range(8):
-			var z := -rect.size.y*.5+(i+.5)*rect.size.y/8
-			Art.branch(node,Vector3(0,0,z),Vector3(.1,1.4,z),.075,Art.JADE)
-			Art.ball(node,Vector3(.1,.8,z),Vector3(.14,.1,.25),Color("779459"))
-		barriers.append({"rect":rect,"node":node})
+		var node := Art.model("vine_gate", world, Vector3(c.x, 0, c.y))
+		node.scale.z = rect.size.y / 3.6
+		barriers.append({"rect":rect, "node":node})
 	for p: Vector2 in level.water:
-		var node := Node3D.new()
-		world.add_child(node)
-		node.position = Vector3(p.x,.55,p.y)
-		Art.ball(node,Vector3.ZERO,Vector3(.18,.26,.18),Color("87e2df"),.35)
-		Art.cylinder(node,Vector3(0,.22,0),.145,0,.26,Color("a5ede5"))
-		Art.ring(world,Vector3(p.x,.05,p.y),.33,.018,Color("87cecd"))
-		drops.append({"p":p,"node":node,"taken":false,"phase":rng.randf()*TAU})
+		var node := Art.model("dew_drop", world, Vector3(p.x, .58, p.y))
+		Art.marker(world, p, .33, Art.NIGHT)
+		drops.append({"p":p, "node":node, "taken":false, "phase":rng.randf()*TAU})
 	for spec in level.flowers:
-		var node := Art.flower(world,spec.p,spec.day)
-		flowers.append({"p":spec.p,"day":spec.day,"node":node,"charge":0.0})
+		var node := Art.flower(world, spec.p, spec.day)
+		flowers.append({"p":spec.p, "day":spec.day, "node":node, "charge":0.0})
 	for p: Vector2 in level.enemies:
 		var node := Art.beetle()
 		world.add_child(node)
-		node.position = Vector3(p.x,0,p.y)
-		enemies.append({"p":p,"home":p,"node":node,"stun":0.0,"phase":rng.randf()*TAU,"awake":false})
-	exit_node = Art.gate(world,level.exit)
+		node.position = Vector3(p.x, 0, p.y)
+		enemies.append({"p":p, "home":p, "node":node, "stun":0.0, "phase":rng.randf()*TAU, "awake":false})
+	exit_node = Art.gate(world, level.exit)
 	player = Art.player()
 	world.add_child(player)
-	player.position = Vector3(player_pos.x,0,player_pos.y)
+	player.position = Vector3(player_pos.x, 0, player_pos.y)
 	lamp_light = OmniLight3D.new()
 	lamp_light.omni_range = 3.2
-	lamp_light.light_energy = .6
+	lamp_light.light_energy = .4
 	lamp_light.position.y = 1.1
 	player.add_child(lamp_light)
 	_build_beam_edge()
-	# Border planting: deterministic, original tiny reeds, rocks, and flowers.
-	for i in range(105):
-		var p := Vector2(rng.randf_range(-11,11),rng.randf_range(-7,7))
-		if absf(p.x)<9.8 and absf(p.y)<5.8:
+	# Plant the border without obstructing navigable routes or objectives.
+	for i in range(140):
+		var p := Vector2(rng.randf_range(-11, 11), rng.randf_range(-7, 7))
+		if absf(p.x) < 9.8 and absf(p.y) < 5.7:
 			continue
-		if _blocked(p,.5) or p.distance_to(level.exit)<1.4:
+		if _blocked(p, .5) or p.distance_to(level.exit) < 1.4:
 			continue
-		for j in range(3):
-			Art.branch(world,Vector3(p.x+j*.07,0,p.y),Vector3(p.x+j*.11,rng.randf_range(.2,.5),p.y+.08),.022,Color("7a8e60"))
-		if i%3==0:
-			Art.blossom(world,Vector3(p.x,.28,p.y),.42,Art.IVORY if i%2 else Color("dc956c"))
-	for i in range(26):
-		var p := Vector2(rng.randf_range(-10.9,10.9),[-6.7,6.7][i%2])
-		Art.ball(world,Vector3(p.x,.1,p.y),Vector3(.22,.17,.2),Color("c0b58c"))
+		var asset := "flower_patch" if i%3 == 0 else "grass_clump"
+		if i%9 == 0:
+			asset = "mushroom_patch"
+		Art.model(asset, world, Vector3(p.x, 0, p.y)).rotation.y = rng.randf()*TAU
+	for i in range(20):
+		var p := Vector2(rng.randf_range(-10.9, 10.9), [-6.7, 6.7][i%2])
+		Art.model("rock_cluster", world, Vector3(p.x, 0, p.y)).rotation.y = rng.randf()*TAU
 	_update_lamp_visuals()
 
 func _build_wall(rect: Rect2) -> void:
 	var c := rect.get_center()
-	Art.box(world,Vector3(c.x,.35,c.y),Vector3(rect.size.x,.7,rect.size.y),Color("b3a683"))
-	Art.box(world,Vector3(c.x,.73,c.y),Vector3(rect.size.x+.13,.12,rect.size.y+.13),Color("d5c8a1"))
 	var along_x := rect.size.x > rect.size.y
-	var count := int(maxf(rect.size.x,rect.size.y)/.55)
+	var length := maxf(rect.size.x, rect.size.y)
+	var depth := minf(rect.size.x, rect.size.y)
+	var count := maxi(1, roundi(length))
 	for i in range(count):
-		var p := Vector3(c.x,.5,c.y)
+		var p := Vector3(c.x, 0, c.y)
 		if along_x:
-			p.x = rect.position.x+(i+.5)*rect.size.x/count
-			p.z += rect.size.y*.5+.008
+			p.x = rect.position.x + (i + .5) * length / count
 		else:
-			p.z = rect.position.y+(i+.5)*rect.size.y/count
-			p.x += rect.size.x*.5+.008
-		Art.box(world,p,Vector3(.017,.45,.017),Color("827d63"))
+			p.z = rect.position.y + (i + .5) * length / count
+		var node := Art.model("wall_segment", world, p)
+		node.scale = Vector3(length / count, 1, depth / .8)
+		if not along_x:
+			node.rotation.y = PI / 2
 
 func _build_beam_edge() -> void:
 	beam_edge = MeshInstance3D.new()
@@ -280,10 +271,10 @@ func _build_beam_edge() -> void:
 
 func _apply_lighting() -> void:
 	var env := environment.environment
-	sun.light_color = Color("ffe3b0") if sky_day else Color("86b5d6")
-	sun.light_energy = 1.5 if sky_day else .48
+	sun.light_color = Color("fff1d8") if sky_day else Color("86b5d6")
+	sun.light_energy = .55 if sky_day else .45
 	env.ambient_light_color = Color("c1d4c2") if sky_day else Color("819fae")
-	env.ambient_light_energy = .7 if sky_day else .55
+	env.ambient_light_energy = .28 if sky_day else .36
 	env.background_color = Color("3c5750") if sky_day else Color("1e333d")
 
 func _input(event: InputEvent) -> void:
@@ -459,7 +450,7 @@ func _update_objectives(delta: float) -> void:
 			emit_particles(flower.p,Art.GOLD if flower.day else Art.NIGHT,18)
 		if flower.charge < 1:
 			charged = false
-		var head: Node3D = flower.node.get_node("Head")
+		var head: Node3D = flower.node.get_meta("head")
 		head.rotation.x = lerpf(-.7,0,flower.charge)
 		head.scale = Vector3.ONE*(.65+flower.charge*.4)
 	if charged and not gate_open:
@@ -501,11 +492,8 @@ func _update_enemies(delta: float) -> void:
 				play_sound("hurt")
 				emit_particles(player_pos,Art.CLAY,10)
 				notice_if_needed()
-		node.position = Vector3(enemy.p.x,.03 if not enemy.awake else absf(sin(clock*12+enemy.phase))*.055,enemy.p.y)
-		node.scale = node.scale.lerp(Vector3(1,.55,1) if not enemy.awake else Vector3.ONE,delta*9)
-		for child in node.get_children():
-			if str(child.name).begins_with("Leg"):
-				child.rotation.z = sin(clock*14+child.get_index())*.18 if enemy.awake and not reduced_motion else 0
+		node.position = Vector3(enemy.p.x, 0, enemy.p.y)
+		Art.animate(node, "scuttle" if enemy.awake else "sleep", delta, not reduced_motion)
 
 func notice_if_needed() -> void:
 	if message_time<1:
@@ -515,30 +503,24 @@ func _update_player(delta: float) -> void:
 	player.position = Vector3(player_pos.x,0,player_pos.y)
 	player.rotation.y = lerp_angle(player.rotation.y,atan2(facing.x,facing.y),1-exp(-14*delta))
 	var moving := movement.length()>.1 or dash_time>0
-	var bounce := absf(sin(clock*12))*.08 if moving else sin(clock*2)*.014
-	if not reduced_motion:
-		player.position.y = bounce
-		player.rotation.z = sin(clock*12)*.06 if moving else 0
-		player.get_node("Stem").rotation.z = sin(clock*4)*.045-movement.x*.09
-		player.get_node("FootL").position.z = sin(clock*12)*.13 if moving else 0
-		player.get_node("FootR").position.z = -sin(clock*12)*.13 if moving else 0
+	Art.animate(player, "walk" if moving else "idle", delta, not reduced_motion, 1.7 if dash_time > 0 else 1.0)
 	player.visible = invulnerability<.15 or int(invulnerability*12)%2 == 0
 
 func _animate_world(delta: float) -> void:
+	if mode == "title":
+		Art.animate(player, "idle", delta, not reduced_motion)
 	for drop in drops:
 		if not drop.taken:
-			drop.node.position.y = .65 if reduced_motion else .65+sin(clock*2.8+drop.phase)*.12
-			drop.node.rotation.y = clock*.6
-	for i in range(tree_nodes.size()):
-		var tree: Node3D = tree_nodes[i]
-		tree.rotation.z = 0 if reduced_motion else sin(clock*.7+i)*.012
-		var near_player := player_pos.distance_to(Vector2(tree.position.x,tree.position.z))<2.3
-		for child in tree.get_children():
-			if child.has_meta("canopy"):
-				var m: StandardMaterial3D = child.material_override
-				m.albedo_color.a = move_toward(m.albedo_color.a,.18 if near_player else 1.0,delta*3)
+			Art.animate(drop.node, "float", delta, not reduced_motion)
+	for tree: Node3D in tree_nodes:
+		Art.animate(tree, "sway", delta, not reduced_motion)
+		var near_player := player_pos.distance_to(Vector2(tree.position.x, tree.position.z)) < 2.3
+		for material: StandardMaterial3D in tree.get_meta("canopy_materials"):
+			material.albedo_color.a = move_toward(material.albedo_color.a, .18 if near_player else 1.0, delta*3)
 	for barrier in barriers:
-		barrier.node.position.y = move_toward(barrier.node.position.y,-1.7 if gate_open else 0,delta*2)
+		if gate_open:
+			Art.animate(barrier.node, "open", delta, not reduced_motion)
+
 	if is_instance_valid(exit_node):
 		exit_node.scale = Vector3.ONE*(1.0+(sin(clock*2)*.014 if unlocked and not reduced_motion else 0.0))
 	for i in range(particles.size()-1,-1,-1):
@@ -546,7 +528,7 @@ func _animate_world(delta: float) -> void:
 		p.life -= delta
 		p.node.position += p.velocity*delta
 		p.velocity.y -= delta*2.5
-		p.node.scale = Vector3.ONE*maxf(.01,p.life/p.max_life)
+		p.node.scale = Vector3.ONE * .09 * maxf(.01, p.life / p.max_life)
 		if p.life<=0:
 			p.node.queue_free()
 			particles.remove_at(i)
@@ -562,12 +544,16 @@ func _update_lamp_visuals() -> void:
 	beam_material.albedo_color = Color(1,.84,.45,.58) if lamp_day else Color(.56,.89,.94,.55)
 	lamp_light.visible = lamp_on
 	lamp_light.light_color = Art.GOLD if lamp_day else Art.NIGHT
+	var lens: MeshInstance3D = player.get_meta("lens")
+	lens.material_override = Art.mat((Art.GOLD if lamp_day else Art.NIGHT) if lamp_on else Color("445d59"), .25 if lamp_on else 0.0)
 
 func emit_particles(p: Vector2, color: Color, count: int) -> void:
 	if reduced_motion or test_mode:
 		return
 	for i in range(count):
-		var node := Art.ball(world,Vector3(p.x,.55,p.y),Vector3.ONE*.045,color,.25)
+		var node := Art.model("petal_particle", world, Vector3(p.x, .55, p.y))
+		node.scale = Vector3.ONE * .09
+		Art.tint(node, color, .08)
 		var a := rng.randf()*TAU
 		var life := rng.randf_range(.4,.8)
 		particles.append({"node":node,"life":life,"max_life":life,"velocity":Vector3(cos(a)*1.2,rng.randf_range(1,2.5),sin(a)*1.2)})
@@ -652,7 +638,7 @@ func _setup_audio() -> void:
 			sfx[sound] = load(path)
 	music = AudioStreamPlayer.new()
 	add_child(music)
-	if ResourceLoader.exists("res://assets/audio/garden.wav") and not test_mode:
+	if ResourceLoader.exists("res://assets/audio/garden.wav") and not test_mode and screenshot_mode == "":
 		music.stream = load("res://assets/audio/garden.wav")
 		music.volume_db = -16
 		music.finished.connect(music.play)
@@ -674,3 +660,11 @@ func _capture() -> void:
 	get_viewport().get_texture().get_image().save_png("res://test-output/%s.png" % screenshot_mode)
 	print("CAPTURE: ",screenshot_mode)
 	get_tree().quit()
+
+func _exit_tree() -> void:
+	if is_instance_valid(music):
+		music.stop()
+		music.stream = null
+	sfx.clear()
+	Art.scenes.clear()
+	Art.palette.clear()

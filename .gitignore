@@ -420,3 +420,7 @@ Makefile
 /art-source/*.blend1
 /legacy_web_build/
 /tools/tests/__pycache__/
+
+# Local visual-QA artifacts
+/.playwright-mcp/
+/art-source/previews/

@@ -1,61 +1,53 @@
-# Verification — September 29, 2026
+# Verification — September 30, 2026: Blender visual rework
 
-## Observed passing checks
+## Passing automated checks
 
-- Godot **4.7.2** project import and GDScript compilation.
-- **209 assertions, zero failures** in `game/tests/test_game.gd`.
-- All six layout flood-fills using the actual player radius and live blockers.
-- Full simulated routes through all six gardens, including lantern charging,
-  actual movement, exposure, enemy updates, dew pickup and completion. No
-  teleportation, free refills, or invincibility is granted by those route tests.
-- Original runtime cast exported to five GLB files with Godot's glTF exporter.
-- Python asset scripts compile; shell launch/test/export scripts pass `sh -n`.
-- Web release export succeeds.
-- Unsigned macOS release ZIP export succeeds.
-- The packed resource file extracted from the macOS export starts and runs for
-  60 frames under the headless engine without script/runtime errors.
-- `git diff --check` passes.
+- **Blender 5.2.1 LTS:** native authoring recipe completed with exit 0, produced
+  `art-source/garden_library.blend`, 21 GLBs, authored NLA clips, and the Cycles
+  title illustration. The saved `.blend` was then opened in a separate background
+  Blender process and exported successfully through the artist-edit exporter.
+- **Godot 4.7.2:** project import and GDScript compilation succeed.
+- **209 gameplay assertions:** local phase geometry, heat/shade, battery, pickups,
+  enemies, collisions, cooldowns, pause/retry, and resource-constrained routes
+  completing all six gardens. No free health/charge or teleportation is used in
+  the route tests.
+- **202 imported-art assertions:** actual GLB geometry, per-model triangle budgets,
+  expected clips, animated foot movement and walk-to-idle restoration, manually
+  advanced/frozen animation, reduced motion, latched gate opening, independent
+  canopy materials, and the named flower/lantern pivots.
+- **Three Python publication tests:** successful web replacement, missing-worklet
+  rejection, and truncated-pack rejection without destroying the previous build.
+- The generated WebAssembly module compiles with Node's WebAssembly engine.
+- Web and unsigned macOS release exports succeed. The current macOS resource pack
+  runs for 60 frames in headless Godot without errors.
+- Python scripts compile, shell scripts pass `sh -n`, and `git diff --check` passes.
 
-The six scripted route finishes retained 100 vitality; remaining charge was
-92.5%, 92.5%, 99.0%, 94.6%, 80.4%, and 99.0% respectively. These are deterministic
-smoke routes, not a claim that the difficulty has been human-playtested.
+## Rendered checks performed
 
-## Not verified yet
+The earlier sandbox/GPU blocker is resolved; these checks actually ran this time.
 
-- **Rendered visual QA and human gameplay.** The active workspace-write sandbox
-  cannot access the macOS graphics session. Native Godot rendering and isolated
-  browser rendering could not be completed here. Headless correctness does not
-  verify shader appearance, visual composition, or frame rate.
-- **Blender source bake.** Blender 5.2.1 crashes in its Metal capability probe
-  inside this sandbox before executing Python. The user's updated instructions
-  identify the unrestricted `full` profile as the required environment. The
-  running Blender UI was not accessed or modified.
-- Hardware gamepad behavior, browser interaction/audio, and unsigned app launch
-  through Finder have not been tested.
+- Blender Cycles character showcase rendered and visually inspected.
+- Native Godot title, daytime and nighttime captures rendered on Apple M4 OpenGL
+  compatibility mode, at the default 1280×800 window size. Captures were inspected
+  for model visibility, lighting, cone/halo placement and HUD composition.
+- Browser export loaded at 1440×900 through a local HTTP server. The title render,
+  actual garden, player movement, dash, polarity change and pause overlay were
+  captured and inspected. The automated browser sequence recorded **no JavaScript
+  page errors or error-level browser console messages**.
+- Fixed overexposed day lighting, excessive ground noise, shelter-disc overlap,
+  and focused primary-button text contrast during the visual pass.
 
-## Follow-up in the user's full-profile session
+Local captures are under `game/test-output/` (ignored by Git). The production title
+illustration is `game/assets/art/title_scene.png`; its editable studio is included
+in the native Blender source.
 
-1. Run `./tools/test.sh` again.
-2. Run `blender --background --factory-startup --python tools/build_models.py`.
-   Confirm that `art-source/garden_cast.blend` opens and contains the five models.
-3. Run `./play.sh -- --capture=title`, `day`, and `night` separately (replace the
-   capture value for each run); inspect the PNGs under `game/test-output/`.
-4. Human-play all six gardens. Verify player visibility through tree crowns,
-   cone/halo alignment, readable HUD/menus, creature wake-up feedback, and audio.
-5. Check 1280×800 and 1440×900, reduced motion, pause, and fullscreen.
-6. Re-export after any fixes. Nothing has been deployed or pushed.
+## Scope and remaining limitations
 
-## Replacement web build
-
-The Godot release export now replaces the legacy files in tracked `web_build/`.
-`web_build.sh` regenerates and validates this folder. `netlify.toml` selects it
-as the prebuilt publish directory; it does not require a cloud Godot installation.
-
-Additional passing checks: three publisher regression tests (successful replacement,
-missing-worklet rejection, truncated-pack rejection), compilation of the exported
-WebAssembly module by Node's WebAssembly engine, and a 60-frame headless startup
-of the exact resource pack in `web_build/`. The 209 game assertions still pass.
-
-Commit/push was attempted but stopped at Git staging: creating `.git/index.lock`
-was denied by the current session's filesystem permissions. No commit or push
-was made; the replacement has not been deployed by this session.
+- This was an automated browser interaction check and visual review, not a full
+  human playthrough or difficulty-balancing pass across all six gardens.
+- Hardware gamepads, touch-only play, other browser engines, subjective audio
+  quality, and unsigned macOS launch through Finder have not been verified.
+- The refreshed Blender-art browser build is in tracked `web_build/`. Its matching
+  unsigned macOS ZIP is in ignored `game/exports/`.
+- Production deployment is a separate check; local builds and visual QA alone do
+  not establish that Netlify has published a given commit.
