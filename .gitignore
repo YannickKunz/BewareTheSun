@@ -410,3 +410,13 @@ Makefile
 *.swo
 *.swn
 /build/compile_commands.json
+
+# Godot rework: generated import cache and local captures
+/game/.godot/
+/game/exports/
+/game/assets/models/*.blend1
+/game/test-output/
+/tools/__pycache__/
+/art-source/*.blend1
+/legacy_web_build/
+/tools/tests/__pycache__/

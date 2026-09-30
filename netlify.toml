@@ -1,0 +1,16 @@
+# The complete Godot browser export is committed to Git. Netlify serves it as-is.
+[build]
+  base = "."
+  command = ""
+  publish = "web_build"
+
+# Godot regenerates fixed asset filenames; revalidate them after each deployment.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
